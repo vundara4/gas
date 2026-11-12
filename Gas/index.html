@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>វិក័យប័ត្រ - វុន ចន្ថា (Vun Chantha Gas & Stove Invoice System)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Moul, Battambang, Inter, Courier Prime -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Courier+Prime:wght@700&family=Inter:wght@400;500;600;700&family=Moul&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Receipt Typography & Ink Styling */
+        :root {
+            --ink-blue: #222a68; /* Authentic dark blue/indigo receipt ink */
+            --ink-light: #3b4694;
+            --stamp-red: #c92a2a;
+            --paper-bg: #fdfcff;
+            --paper-tint: #f8f6fc;
+        }
+
+        body {
+            font-family: 'Battambang', 'Inter', sans-serif;
+            background-color: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .font-moul {
+            font-family: 'Moul', serif;
+        }
+
+        .font-battambang {
+            font-family: 'Battambang', sans-serif;
+        }
+
+        .font-stamp {
+            font-family: 'Courier Prime', monospace;
+            letter-spacing: 0.12em;
+        }
+
+        .font-handwriting {
+            font-family: 'Inter', 'Battambang', sans-serif;
+            color: #1d4ed8; /* Blue ballpoint pen ink look for typed values */
+            font-weight: 600;
+        }
+
+        /* Receipt Paper Container */
+        .receipt-sheet {
+            background-color: var(--paper-bg);
+            background-image: radial-gradient(#e5e0f0 0.5px, transparent 0.5px);
+            background-size: 16px 16px;
+            color: var(--ink-blue);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.06);
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Receipt Borders */
+        .receipt-border {
+            border-color: var(--ink-blue);
+        }
+
+        /* Clean Inputs Inside Receipt */
+        .receipt-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            color: #1e3a8a;
+            font-weight: 600;
+            transition: background-color 0.15s ease;
+        }
+
+        .receipt-input:hover, .receipt-input:focus {
+            background-color: rgba(59, 130, 246, 0.08);
+            border-radius: 3px;
+        }
+
+        .receipt-dotted-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1.5px dotted var(--ink-blue);
+            outline: none;
+            color: #1e3a8a;
+            font-weight: 600;
+            padding: 0 4px;
+        }
+
+        .receipt-dotted-input:focus {
+            background-color: rgba(59, 130, 246, 0.08);
+        }
+
+        /* Red Stamp Styling */
+        .invoice-stamp {
+            color: var(--stamp-red);
+            text-shadow: 0.5px 0.5px 0px rgba(201, 42, 42, 0.25);
+            transform: rotate(-0.8deg);
+        }
+
+        /* Remove number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Print Media Styles */
+        @media print {
+            @page {
+                size: A5 portrait;
+                margin: 6mm;
+            }
+
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+
+            .receipt-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                background-image: none !important;
+                background-color: white !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 4mm !important;
+                margin: 0 !important;
+            }
+
+            .receipt-input, .receipt-dotted-input {
+                background: transparent !important;
+            }
+
+            /* Hide placeholders when printing so blank lines stay clean */
+            input::placeholder {
+                color: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Control Toolbar (Hidden on Print) -->
+    <header class="no-print bg-slate-900 text-white shadow-lg sticky top-0 z-30 border-b border-slate-700">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand / System Title -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center shadow-inner">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-bold leading-tight text-white">ប្រព័ន្ធចេញវិក័យប័ត្រ <span class="text-indigo-400 font-normal">| Vun Chantha</span></h1>
+                    <p class="text-[11px] text-slate-400">Gas & Stove Shop Invoice System</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Currency Toggle -->
+                <div class="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700">
+                    <button type="button" id="btn-curr-khr" onclick="setCurrency('KHR')" class="px-2.5 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white transition">
+                        ៛ KHR
+                    </button>
+                    <button type="button" id="btn-curr-usd" onclick="setCurrency('USD')" class="px-2.5 py-1 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">
+                        $ USD
+                    </button>
+                </div>
+
+                <!-- Exchange Rate Helper -->
+                <div class="hidden md:flex items-center gap-1.5 bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs">
+                    <span class="text-slate-400">អត្រា $1 =</span>
+                    <input type="number" id="exchange-rate" value="4100" onchange="calculateTotals()" class="w-14 bg-slate-900 text-amber-300 font-bold text-center rounded px-1 py-0.5 border border-slate-600 focus:outline-none">
+                    <span class="text-slate-400">៛</span>
+                </div>
+
+                <!-- New / Reset Invoice -->
+                <button type="button" onclick="newInvoice()" class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium rounded-lg border border-slate-600 transition cursor-pointer">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>វិក័យប័ត្រថ្មី (New)</span>
+                </button>
+
+                <!-- Save Invoice -->
+                <button type="button" onclick="saveInvoice()" class="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg shadow transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
+                    <span>រក្សាទុក (Save)</span>
+                </button>
+
+                <!-- History Drawer Button -->
+                <button type="button" onclick="toggleHistoryModal(true)" class="relative flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium rounded-lg border border-slate-600 transition cursor-pointer">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="hidden sm:inline">ប្រវត្តិ (History)</span>
+                    <span id="saved-count-badge" class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+
+                <!-- Print Button -->
+                <button type="button" onclick="window.print()" class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold rounded-lg shadow-md transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    <span>ព្រីនវិក័យប័ត្រ (Print)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Notification Banner (Hidden on Print) -->
+    <div id="toast-banner" class="no-print fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 text-sm font-medium">
+            <span id="toast-icon" class="text-emerald-400">✔</span>
+            <span id="toast-message">រក្សាទុកវិក័យប័ត្របានជោគជ័យ!</span>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="print-wrapper flex-1 py-6 px-3 sm:px-6 flex flex-col items-center">
+        
+        <!-- Quick Row & Preset Helper Bar (Hidden on Print) -->
+        <div class="no-print w-full max-w-[680px] mb-3 flex flex-wrap items-center justify-between gap-2 bg-white/90 backdrop-blur px-3.5 py-2 rounded-xl shadow-sm border border-slate-300 text-xs">
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="font-bold text-slate-600 mr-1">បញ្ចូលទំនិញរហ័ស:</span>
+                <button type="button" onclick="quickAddItem('Gass (ហ្គាសកំប៉ុង)', 1, 1800)" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-semibold rounded-md border border-indigo-200 transition cursor-pointer">+ ហ្គាសកំប៉ុង (1,800៛)</button>
+                <button type="button" onclick="quickAddItem('ហ្គាសធុង 15kg', 1, 65000)" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-semibold rounded-md border border-indigo-200 transition cursor-pointer">+ ហ្គាសធុង 15kg</button>
+                <button type="button" onclick="quickAddItem('ចង្ក្រានហ្គាស', 1, 120000)" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-semibold rounded-md border border-indigo-200 transition cursor-pointer">+ ចង្ក្រានហ្គាស</button>
+                <button type="button" onclick="quickAddItem('ជួសជុលចង្ក្រានហ្គាស', 1, 15000)" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-semibold rounded-md border border-indigo-200 transition cursor-pointer">+ ជួសជុលចង្ក្រាន</button>
+            </div>
+            <button type="button" onclick="addRow()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-md shadow-xs transition cursor-pointer">
+                + បន្ថែមជួរ (Add Row)
+            </button>
+        </div>
+
+        <!-- ===================================================================== -->
+        <!-- PRINTABLE RECEIPT PAPER (Modeled accurately after image_9738a3.jpg)    -->
+        <!-- ===================================================================== -->
+        <div id="printable-receipt" class="receipt-sheet w-full max-w-[680px] rounded-sm p-5 sm:p-8 relative">
+            
+            <!-- TOP HEADER SECTION -->
+            <div class="flex items-start justify-between gap-2 mb-1">
+                
+                <!-- Left Graphic: LPG Gas Cylinders SVG Illustration -->
+                <div class="w-24 sm:w-28 flex-shrink-0 flex flex-col items-center justify-center pt-1">
+                    <svg viewBox="0 0 120 110" class="w-20 sm:w-24 h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Back Cylinder -->
+                        <g opacity="0.88">
+                            <rect x="26" y="14" width="26" height="8" rx="2" stroke="#222a68" stroke-width="2" fill="#e0e7ff"/>
+                            <path d="M32 14V9H46V14" stroke="#222a68" stroke-width="2"/>
+                            <rect x="22" y="22" width="34" height="52" rx="9" stroke="#222a68" stroke-width="2.2" fill="#c7d2fe"/>
+                            <line x1="22" y1="36" x2="56" y2="36" stroke="#222a68" stroke-width="1.5"/>
+                            <line x1="22" y1="60" x2="56" y2="60" stroke="#222a68" stroke-width="1.5"/>
+                            <rect x="27" y="74" width="24" height="5" rx="1" fill="#222a68"/>
+                        </g>
+                        <!-- Front Left Small Cylinder -->
+                        <g>
+                            <rect x="10" y="38" width="22" height="7" rx="2" stroke="#222a68" stroke-width="2" fill="#eef2ff"/>
+                            <path d="M15 38V34H27V38" stroke="#222a68" stroke-width="2"/>
+                            <rect x="7" y="45" width="28" height="48" rx="7" stroke="#222a68" stroke-width="2.2" fill="#dbeafe"/>
+                            <text x="21" y="73" text-anchor="middle" fill="#222a68" font-size="9" font-weight="bold" font-family="Inter, sans-serif">LPG</text>
+                            <rect x="11" y="93" width="20" height="5" rx="1" fill="#222a68"/>
+                        </g>
+                        <!-- Front Right Main Cylinder -->
+                        <g>
+                            <rect x="44" y="30" width="26" height="8" rx="2" stroke="#222a68" stroke-width="2" fill="#eef2ff"/>
+                            <path d="M50 30V25H64V30" stroke="#222a68" stroke-width="2"/>
+                            <circle cx="57" cy="27" r="2.5" fill="#222a68"/>
+                            <rect x="40" y="38" width="34" height="56" rx="9" stroke="#222a68" stroke-width="2.2" fill="#bfdbfe"/>
+                            <text x="57" y="69" text-anchor="middle" fill="#222a68" font-size="10.5" font-weight="bold" font-family="Inter, sans-serif">LPG</text>
+                            <rect x="45" y="94" width="24" height="5" rx="1" fill="#222a68"/>
+                        </g>
+                        <!-- Small Portable Gas Canister -->
+                        <g>
+                            <rect x="78" y="64" width="16" height="32" rx="3" stroke="#222a68" stroke-width="2" fill="#e0e7ff"/>
+                            <path d="M82 64V60H90V64" stroke="#222a68" stroke-width="2"/>
+                            <line x1="78" y1="74" x2="94" y2="74" stroke="#222a68" stroke-width="1.5"/>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Center Shop Title & Services -->
+                <div class="flex-1 text-center pt-1">
+                    <h1 class="font-moul text-2xl sm:text-4xl tracking-wide leading-snug" style="color: var(--ink-blue);">
+                        វុន ចន្ថា
+                    </h1>
+                    <p class="font-battambang font-bold text-base sm:text-xl mt-1 tracking-wide">
+                        លក់ ដុំ និង លក់រាយ
+                    </p>
+                    <p class="font-battambang font-bold text-xs sm:text-base mt-0.5 leading-snug">
+                        មានទទួលជួសជុលចង្ក្រានហ្គាសគ្រប់ប្រភេទ
+                    </p>
+                </div>
+
+                <!-- Right Graphic: Double Gas Stove + Butane Cans SVG Illustration -->
+                <div class="w-24 sm:w-28 flex-shrink-0 flex flex-col items-center justify-center pt-1">
+                    <svg viewBox="0 0 130 110" class="w-22 sm:w-28 h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Row of 4 Butane Gas Cans behind stove -->
+                        <g>
+                            <rect x="24" y="24" width="15" height="30" rx="2" stroke="#222a68" stroke-width="1.8" fill="#dbeafe"/>
+                            <rect x="28" y="20" width="7" height="4" fill="#222a68"/>
+                            
+                            <rect x="43" y="24" width="15" height="30" rx="2" stroke="#222a68" stroke-width="1.8" fill="#bfdbfe"/>
+                            <rect x="47" y="20" width="7" height="4" fill="#222a68"/>
+
+                            <rect x="62" y="24" width="15" height="30" rx="2" stroke="#222a68" stroke-width="1.8" fill="#dbeafe"/>
+                            <rect x="66" y="20" width="7" height="4" fill="#222a68"/>
+
+                            <rect x="81" y="24" width="15" height="30" rx="2" stroke="#222a68" stroke-width="1.8" fill="#bfdbfe"/>
+                            <rect x="85" y="20" width="7" height="4" fill="#222a68"/>
+                        </g>
+                        <!-- Double Burner Gas Stove Body (Perspective) -->
+                        <polygon points="18,54 108,54 120,76 8,76" fill="#eff6ff" stroke="#222a68" stroke-width="2.2" stroke-linejoin="round"/>
+                        <rect x="8" y="76" width="112" height="16" rx="2" fill="#bfdbfe" stroke="#222a68" stroke-width="2.2"/>
+                        <!-- Stove Legs -->
+                        <rect x="14" y="92" width="10" height="5" rx="1" fill="#222a68"/>
+                        <rect x="104" y="92" width="10" height="5" rx="1" fill="#222a68"/>
+                        <!-- Left Burner & Grate -->
+                        <ellipse cx="40" cy="64" rx="15" ry="6" stroke="#222a68" stroke-width="2" fill="#93c5fd"/>
+                        <ellipse cx="40" cy="64" rx="7" ry="2.5" fill="#222a68"/>
+                        <line x1="22" y1="64" x2="58" y2="64" stroke="#222a68" stroke-width="1.8"/>
+                        <line x1="40" y1="56" x2="40" y2="72" stroke="#222a68" stroke-width="1.8"/>
+                        <!-- Right Burner & Grate -->
+                        <ellipse cx="88" cy="64" rx="15" ry="6" stroke="#222a68" stroke-width="2" fill="#93c5fd"/>
+                        <ellipse cx="88" cy="64" rx="7" ry="2.5" fill="#222a68"/>
+                        <line x1="70" y1="64" x2="106" y2="64" stroke="#222a68" stroke-width="1.8"/>
+                        <line x1="88" y1="56" x2="88" y2="72" stroke="#222a68" stroke-width="1.8"/>
+                        <!-- Control Knobs -->
+                        <circle cx="34" cy="84" r="4" fill="#eff6ff" stroke="#222a68" stroke-width="1.8"/>
+                        <line x1="34" y1="81" x2="34" y2="87" stroke="#222a68" stroke-width="1.5"/>
+                        <circle cx="94" cy="84" r="4" fill="#eff6ff" stroke="#222a68" stroke-width="1.8"/>
+                        <line x1="94" y1="81" x2="94" y2="87" stroke="#222a68" stroke-width="1.5"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- DOCUMENT TITLE ("វិក័យប័ត្រ") & INVOICE NUMBER STAMP -->
+            <div class="relative flex flex-col sm:flex-row items-center justify-center mt-1 mb-3">
+                <h2 class="font-moul text-lg sm:text-2xl underline decoration-2 underline-offset-4 tracking-wider">
+                    វិក័យប័ត្រ
+                </h2>
+
+                <!-- Red Stamp Invoice Number on Right -->
+                <div class="sm:absolute sm:right-0 sm:top-0 mt-2 sm:mt-0 flex items-baseline gap-1">
+                    <span class="font-bold text-sm sm:text-base">N° :</span>
+                    <div class="border-b-2 border-dotted border-[#222a68] px-1">
+                        <input type="text" id="invoice-number" value="000000" aria-label="Invoice Number"
+                            class="invoice-stamp font-stamp text-xl sm:text-2xl font-bold bg-transparent outline-none w-28 sm:w-32 text-right tracking-widest">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOMER INFO BOX (LEFT) & SHOP PHONE NUMBERS (RIGHT) -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                
+                <!-- Bordered Rounded Customer Box -->
+                <div class="w-full sm:w-[56%] border-2 receipt-border rounded-xl px-3.5 py-2 bg-white/40">
+                    <div class="flex items-center gap-1.5 mb-1.5">
+                        <label for="customer-name" class="text-xs sm:text-sm font-bold whitespace-nowrap">អតិថិជន:</label>
+                        <input type="text" id="customer-name" placeholder="........................................" 
+                            class="receipt-dotted-input text-xs sm:text-sm w-full">
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <label for="customer-phone" class="text-xs sm:text-sm font-bold whitespace-nowrap">ទូរស័ព្ទ:</label>
+                        <input type="text" id="customer-phone" placeholder="........................................" 
+                            class="receipt-dotted-input text-xs sm:text-sm w-full">
+                    </div>
+                </div>
+
+                <!-- Shop Phone Numbers on Right -->
+                <div class="w-full sm:w-auto flex justify-end">
+                    <div class="text-xs sm:text-sm font-bold leading-snug tracking-wide font-sans" style="color: var(--ink-blue);">
+                        <div class="flex items-start gap-1.5">
+                            <span>Tel :</span>
+                            <div class="flex flex-col">
+                                <span>016 856 409</span>
+                                <span>012 499 687</span>
+                                <span>011 349 768</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN INVOICE TABLE -->
+            <div class="w-full overflow-x-auto">
+                <table class="w-full border-collapse border-2 receipt-border text-xs sm:text-sm">
+                    <thead>
+                        <tr class="bg-[#222a68]/5 font-bold text-center">
+                            <th class="border-2 receipt-border py-2 px-1 w-10 sm:w-12">ល.រ</th>
+                            <th class="border-2 receipt-border py-2 px-2">រាយមុខទំនិញ</th>
+                            <th class="border-2 receipt-border py-2 px-1.5 w-16 sm:w-20">ចំនួន</th>
+                            <th class="border-2 receipt-border py-2 px-1.5 w-24 sm:w-28">តម្លៃរាយ</th>
+                            <th class="border-2 receipt-border py-2 px-2 w-28 sm:w-32">តម្លៃសរុប</th>
+                            <th class="no-print border-2 receipt-border py-2 px-1 w-8 text-slate-500">✕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-items-body">
+                        <!-- Rows dynamically rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- FOOTER & TOTALS GRID -->
+            <div class="mt-2 flex flex-col sm:flex-row justify-between items-stretch gap-3">
+                
+                <!-- Left Side: Location Note & Date Line -->
+                <div class="flex-1 flex flex-col justify-between pt-1 pb-1">
+                    <!-- Location / Shop Note -->
+                    <p class="font-bold text-xs sm:text-sm tracking-wide">
+                        *ក្រោមអង់តែនទូរស័ព្ទទួលធេកូ
+                    </p>
+
+                    <!-- Date Line: ថ្ងៃទី ..... ខែ ..... ឆ្នាំ២០ ..... -->
+                    <div class="mt-5 sm:mt-8 flex flex-wrap items-baseline gap-1 text-xs sm:text-sm font-bold">
+                        <span>ថ្ងៃទី</span>
+                        <input type="text" id="date-day" value="08" maxlength="2" aria-label="Day"
+                            class="receipt-dotted-input w-9 sm:w-11 text-center font-handwriting text-sm sm:text-base">
+                        <span>ខែ</span>
+                        <input type="text" id="date-month" value="11" maxlength="2" aria-label="Month"
+                            class="receipt-dotted-input w-9 sm:w-11 text-center font-handwriting text-sm sm:text-base">
+                        <span>ឆ្នាំ២០</span>
+                        <input type="text" id="date-year" value="26" maxlength="2" aria-label="Year"
+                            class="receipt-dotted-input w-9 sm:w-11 text-center font-handwriting text-sm sm:text-base">
+                        
+                        <!-- Today quick button (hidden on print) -->
+                        <button type="button" onclick="setTodayDate()" title="កំណត់ថ្ងៃនេះ (Set Today)" class="no-print ml-1.5 text-[10px] px-1.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-sans font-normal cursor-pointer">
+                            ថ្ងៃនេះ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Side: Totals Box (Total in USD / Deposit / Balance Due) -->
+                <div class="w-full sm:w-[46%] flex flex-col">
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <tbody>
+                            <!-- សរុប (Total) -->
+                            <tr>
+                                <td class="font-bold text-right pr-2.5 py-1.5 w-24">សរុប$</td>
+                                <td class="border-2 receipt-border px-2 py-1.5 bg-white/50">
+                                    <div class="flex items-center justify-between font-handwriting text-sm sm:text-base">
+                                        <span id="grand-total-display" class="w-full text-right">31.61</span>
+                                        <span class="ml-1 font-bold text-[#222a68]">$</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- កក់មុន (Deposit / Advance) -->
+                            <tr>
+                                <td class="font-bold text-right pr-2.5 py-1.5">កក់មុន</td>
+                                <td class="border-x-2 border-b-2 receipt-border px-2 py-1 bg-white/50">
+                                    <div class="flex items-center justify-between">
+                                        <input type="number" id="deposit-input" value="0" min="0" step="any" oninput="calculateTotals()"
+                                            class="receipt-input text-right font-handwriting text-sm sm:text-base" placeholder="0">
+                                        <span class="currency-symbol ml-1 font-bold text-[#222a68]">៛</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- នៅខ្វះ (Balance Due) -->
+                            <tr>
+                                <td class="font-bold text-right pr-2.5 py-1.5">នៅខ្វះ</td>
+                                <td class="border-x-2 border-b-2 receipt-border px-2 py-1.5 bg-white/50">
+                                    <div class="flex items-center justify-between font-handwriting text-sm sm:text-base">
+                                        <span id="balance-due-display" class="w-full text-right">129,600</span>
+                                        <span class="currency-symbol ml-1 font-bold text-[#222a68]">៛</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Secondary Currency Conversion Note (Optional helper, subtle) -->
+                    <div id="secondary-currency-note" class="text-[11px] text-right mt-1 font-sans text-slate-600 font-medium">
+                        ≈ $31.61 USD (អត្រា 4,100៛)
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIGNATURE LINE AT BOTTOM -->
+            <div class="mt-7 sm:mt-9 pt-2 grid grid-cols-3 gap-2 text-center font-bold text-xs sm:text-sm">
+                <div class="flex flex-col items-center">
+                    <span>ហត្ថលេខាអ្នកទិញ</span>
+                    <div class="h-10 sm:h-12 w-full"></div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span>អ្នកដឹក</span>
+                    <div class="h-10 sm:h-12 w-full"></div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span>ហត្ថលេខាអ្នកលក់</span>
+                    <div class="h-10 sm:h-12 w-full"></div>
+                </div>
+            </div>
+
+        </div>
+        <!-- END OF PRINTABLE RECEIPT PAPER -->
+
+        <!-- Helper Footer Note (Hidden on Print) -->
+        <p class="no-print mt-4 text-xs text-slate-500 text-center max-w-lg">
+            គន្លឹះ៖ ចុចលើប្រអប់នីមួយៗក្នុងវិក័យប័ត្រដើម្បីកែប្រែទិន្នន័យដោយផ្ទាល់។ ពេលចុច <strong class="text-slate-700">ព្រីនវិក័យប័ត្រ (Print)</strong> ប៊ូតុងបញ្ជាទាំងអស់នឹងត្រូវបានលាក់ដោយស្វ័យប្រវត្តិ។
+        </p>
+    </main>
+
+    <!-- SAVED INVOICES HISTORY MODAL (Hidden on Print) -->
+    <div id="history-modal" class="no-print fixed inset-0 z-40 hidden">
+        <!-- Backdrop -->
+        <div onclick="toggleHistoryModal(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+        
+        <!-- Modal Panel -->
+        <div class="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col border-l border-slate-200">
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-base">ប្រវត្តិវិក័យប័ត្រដែលបានរក្សាទុក</h3>
+                    <p class="text-xs text-slate-400">Saved Invoices History (Local Storage)</p>
+                </div>
+                <button type="button" onclick="toggleHistoryModal(false)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+                <!-- Saved invoice cards injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        // =========================================================================
+        // STATE MANAGEMENT
+        // =========================================================================
+        const STORAGE_KEY = 'vun_chantha_invoices_v1';
+        const LAST_NUM_KEY = 'vun_chantha_last_invoice_num';
+
+        let currentCurrency = 'KHR'; // 'KHR' (៛) or 'USD' ($)
+
+        // Default items matching the provided receipt photo (image_9738a3.jpg)
+        let invoiceItems = [
+            { id: 1, description: 'Gass', qty: 72, unitPrice: 1800 },
+            { id: 2, description: '', qty: '', unitPrice: '' },
+            { id: 3, description: '', qty: '', unitPrice: '' },
+            { id: 4, description: '', qty: '', unitPrice: '' }
+        ];
+
+        // =========================================================================
+        // INITIALIZATION
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTableRows();
+            calculateTotals();
+            updateHistoryBadge();
+        });
+
+        // =========================================================================
+        // TABLE RENDERING & ROW OPERATIONS
+        // =========================================================================
+        function renderTableRows() {
+            const tbody = document.getElementById('invoice-items-body');
+            tbody.innerHTML = '';
+
+            const symbol = currentCurrency === 'KHR' ? '៛' : '$';
+
+            invoiceItems.forEach((item, index) => {
+                const qtyNum = parseFloat(item.qty) || 0;
+                const priceNum = parseFloat(item.unitPrice) || 0;
+                const rowTotal = qtyNum * priceNum;
+                const hasValues = item.qty !== '' && item.unitPrice !== '' && (qtyNum > 0 || priceNum > 0);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-blue-50/40 transition-colors';
+
+                tr.innerHTML = `
+                    <!-- 1. ល.រ (Row Number) -->
+                    <td class="border-2 receipt-border py-2 px-1 text-center font-bold">
+                        ${index + 1}
+                    </td>
+
+                    <!-- 2. រាយមុខទំនិញ (Item Description) -->
+                    <td class="border-2 receipt-border py-1.5 px-2">
+                        <input type="text" 
+                            value="${escapeHtml(item.description)}" 
+                            oninput="updateItemField(${index}, 'description', this.value)"
+                            placeholder=""
+                            class="receipt-input font-handwriting text-sm sm:text-base">
+                    </td>
+
+                    <!-- 3. ចំនួន (Quantity) -->
+                    <td class="border-2 receipt-border py-1.5 px-1.5">
+                        <input type="number" 
+                            value="${item.qty}" 
+                            min="0" 
+                            step="any"
+                            oninput="updateItemField(${index}, 'qty', this.value)"
+                            class="receipt-input text-center font-handwriting text-sm sm:text-base">
+                    </td>
+
+                    <!-- 4. តម្លៃរាយ (Unit Price) -->
+                    <td class="border-2 receipt-border py-1.5 px-1.5">
+                        <div class="flex items-center justify-end">
+                            <input type="number" 
+                                value="${item.unitPrice}" 
+                                min="0" 
+                                step="any"
+                                oninput="updateItemField(${index}, 'unitPrice', this.value)"
+                                class="receipt-input text-right font-handwriting text-sm sm:text-base">
+                            ${item.unitPrice !== '' ? `<span class="ml-0.5 text-xs font-bold text-[#222a68]">${symbol}</span>` : ''}
+                        </div>
+                    </td>
+
+                    <!-- 5. តម្លៃសរុប (Row Total) -->
+                    <td class="border-2 receipt-border py-1.5 px-2 text-right font-handwriting text-sm sm:text-base">
+                        ${hasValues ? `${formatMoney(rowTotal)} <span class="text-xs font-bold text-[#222a68]">${symbol}</span>` : ''}
+                    </td>
+
+                    <!-- Delete Row Button (No Print) -->
+                    <td class="no-print border-2 receipt-border py-1 px-1 text-center">
+                        <button type="button" onclick="removeRow(${index})" title="លុបជួរនេះ (Remove row)" 
+                            class="text-slate-400 hover:text-rose-600 font-bold text-xs px-1.5 py-0.5 rounded transition cursor-pointer">
+                            ✕
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateItemField(index, field, value) {
+            invoiceItems[index][field] = value;
+
+            // Update the specific row's total cell & currency symbol without losing focus
+            const tbody = document.getElementById('invoice-items-body');
+            const tr = tbody.children[index];
+            if (tr) {
+                const symbol = currentCurrency === 'KHR' ? '៛' : '$';
+                const qtyNum = parseFloat(invoiceItems[index].qty) || 0;
+                const priceNum = parseFloat(invoiceItems[index].unitPrice) || 0;
+                const rowTotal = qtyNum * priceNum;
+                const hasValues = invoiceItems[index].qty !== '' && invoiceItems[index].unitPrice !== '' && (qtyNum > 0 || priceNum > 0);
+
+                // Update row total cell (5th td, index 4)
+                tr.children[4].innerHTML = hasValues 
+                    ? `${formatMoney(rowTotal)} <span class="text-xs font-bold text-[#222a68]">${symbol}</span>` 
+                    : '';
+            }
+
+            calculateTotals();
+        }
+
+        function addRow() {
+            invoiceItems.push({
+                id: Date.now(),
+                description: '',
+                qty: '',
+                unitPrice: ''
+            });
+            renderTableRows();
+            calculateTotals();
+        }
+
+        function removeRow(index) {
+            if (invoiceItems.length <= 1) {
+                invoiceItems[0] = { id: Date.now(), description: '', qty: '', unitPrice: '' };
+            } else {
+                invoiceItems.splice(index, 1);
+            }
+            renderTableRows();
+            calculateTotals();
+        }
+
+        function quickAddItem(description, qty, priceKHR) {
+            const rate = parseFloat(document.getElementById('exchange-rate').value) || 4100;
+            const unitPrice = currentCurrency === 'KHR' ? priceKHR : Number((priceKHR / rate).toFixed(2));
+
+            // Find first empty row, otherwise append new row
+            const emptyIndex = invoiceItems.findIndex(item => !item.description && !item.qty && !item.unitPrice);
+            if (emptyIndex !== -1) {
+                invoiceItems[emptyIndex] = { id: Date.now(), description, qty, unitPrice };
+            } else {
+                invoiceItems.push({ id: Date.now(), description, qty, unitPrice });
+            }
+
+            renderTableRows();
+            calculateTotals();
+            showToast(`បានបន្ថែម "${description}"`);
+        }
+
+        // =========================================================================
+        // CALCULATIONS & CURRENCY FORMATTING
+        // =========================================================================
+        function calculateTotals() {
+            let grandTotal = 0;
+
+            invoiceItems.forEach(item => {
+                const q = parseFloat(item.qty) || 0;
+                const p = parseFloat(item.unitPrice) || 0;
+                grandTotal += q * p;
+            });
+
+            const rate = parseFloat(document.getElementById('exchange-rate').value) || 4100;
+            const usdTotal = currentCurrency === 'KHR' && rate > 0
+                ? grandTotal / rate
+                : grandTotal;
+
+            document.getElementById('grand-total-display').textContent = usdTotal.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            document.getElementById('balance-due-display').textContent = '0';
+
+            const noteEl = document.getElementById('secondary-currency-note');
+            const khrEquivalent = Math.round(currentCurrency === 'KHR' ? grandTotal : grandTotal * rate);
+            noteEl.textContent = `≈ ${khrEquivalent.toLocaleString()} ៛ KHR (អត្រា ${rate.toLocaleString()}៛)`;
+        }
+
+        function setCurrency(currency) {
+            if (currentCurrency === currency) return;
+
+            const rate = parseFloat(document.getElementById('exchange-rate').value) || 4100;
+            const oldCurrency = currentCurrency;
+            currentCurrency = currency;
+
+            // Convert existing numeric item prices & deposit automatically
+            invoiceItems = invoiceItems.map(item => {
+                if (item.unitPrice === '' || isNaN(parseFloat(item.unitPrice))) return item;
+                const val = parseFloat(item.unitPrice);
+                const converted = currency === 'USD' 
+                    ? Number((val / rate).toFixed(2)) 
+                    : Math.round(val * rate);
+                return { ...item, unitPrice: converted };
+            });
+
+            const depositEl = document.getElementById('deposit-input');
+            const depositVal = parseFloat(depositEl.value) || 0;
+            if (depositVal > 0) {
+                depositEl.value = currency === 'USD' 
+                    ? Number((depositVal / rate).toFixed(2)) 
+                    : Math.round(depositVal * rate);
+            }
+
+            // Update currency symbol labels
+            const symbol = currency === 'KHR' ? '៛' : '$';
+            document.querySelectorAll('.currency-symbol').forEach(el => {
+                el.textContent = symbol;
+            });
+
+            // Toggle button active styling
+            const btnKhr = document.getElementById('btn-curr-khr');
+            const btnUsd = document.getElementById('btn-curr-usd');
+            if (currency === 'KHR') {
+                btnKhr.className = 'px-2.5 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white transition';
+                btnUsd.className = 'px-2.5 py-1 text-xs font-bold rounded-md text-slate-300 hover:text-white transition';
+            } else {
+                btnUsd.className = 'px-2.5 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white transition';
+                btnKhr.className = 'px-2.5 py-1 text-xs font-bold rounded-md text-slate-300 hover:text-white transition';
+            }
+
+            renderTableRows();
+            calculateTotals();
+            showToast(`ប្តូររូបិយប័ណ្ណទៅជា ${currency === 'KHR' ? 'ប្រាក់រៀល (៛)' : 'ដុល្លារ ($)'}`);
+        }
+
+        function formatMoney(amount) {
+            if (currentCurrency === 'KHR') {
+                return Math.round(amount).toLocaleString('en-US');
+            } else {
+                return Number(amount).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        }
+
+        // =========================================================================
+        // DATE & NEW INVOICE RESET
+        // =========================================================================
+        function setTodayDate() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = String(now.getFullYear()).slice(-2);
+
+            document.getElementById('date-day').value = day;
+            document.getElementById('date-month').value = month;
+            document.getElementById('date-year').value = year;
+            showToast(`បានកំណត់ថ្ងៃទី ${day}/${month}/20${year}`);
+        }
+
+        function incrementInvoiceNumber(currentStr) {
+            const num = parseInt(currentStr, 10);
+            if (isNaN(num)) return '000001';
+            const nextNum = num + 1;
+            return String(nextNum).padStart(currentStr.length || 6, '0');
+        }
+
+        function newInvoice() {
+            const currentInvNum = document.getElementById('invoice-number').value.trim();
+            const nextInvNum = incrementInvoiceNumber(currentInvNum);
+
+            document.getElementById('invoice-number').value = nextInvNum;
+            document.getElementById('customer-name').value = '';
+            document.getElementById('customer-phone').value = '';
+            document.getElementById('deposit-input').value = '0';
+
+            setTodayDate();
+
+            invoiceItems = [
+                { id: 1, description: '', qty: '', unitPrice: '' },
+                { id: 2, description: '', qty: '', unitPrice: '' },
+                { id: 3, description: '', qty: '', unitPrice: '' },
+                { id: 4, description: '', qty: '', unitPrice: '' }
+            ];
+
+            renderTableRows();
+            calculateTotals();
+            showToast(`បង្កើតវិក័យប័ត្រថ្មី N° ${nextInvNum}`);
+        }
+
+        // =========================================================================
+        // SAVE & LOAD INVOICES (LOCAL STORAGE)
+        // =========================================================================
+        function getSavedInvoices() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveInvoice() {
+            const invoiceNumber = document.getElementById('invoice-number').value.trim() || '000000';
+            const customerName = document.getElementById('customer-name').value.trim() || 'អតិថិជនទូទៅ';
+            const customerPhone = document.getElementById('customer-phone').value.trim();
+            const day = document.getElementById('date-day').value;
+            const month = document.getElementById('date-month').value;
+            const year = document.getElementById('date-year').value;
+            const deposit = parseFloat(document.getElementById('deposit-input').value) || 0;
+
+            let grandTotal = 0;
+            invoiceItems.forEach(item => {
+                grandTotal += (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
+            });
+
+            const record = {
+                id: Date.now(),
+                invoiceNumber,
+                customerName,
+                customerPhone,
+                date: `${day}/${month}/20${year}`,
+                day,
+                month,
+                year,
+                currency: currentCurrency,
+                items: JSON.parse(JSON.stringify(invoiceItems)),
+                deposit,
+                grandTotal,
+                savedAt: new Date().toLocaleString()
+            };
+
+            const list = getSavedInvoices();
+            // Replace if same invoiceNumber exists, otherwise unshift
+            const existingIdx = list.findIndex(inv => inv.invoiceNumber === invoiceNumber);
+            if (existingIdx !== -1) {
+                list[existingIdx] = record;
+            } else {
+                list.unshift(record);
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            updateHistoryBadge();
+            const nextInvoiceNumber = incrementInvoiceNumber(invoiceNumber);
+            newInvoice();
+            showToast(`បានរក្សាទុកវិក័យប័ត្រ N° ${invoiceNumber} និងបង្កើតថ្មី N° ${nextInvoiceNumber}`);
+        }
+
+        function loadInvoice(id) {
+            const list = getSavedInvoices();
+            const inv = list.find(item => item.id === id);
+            if (!inv) return;
+
+            currentCurrency = inv.currency || 'KHR';
+            const symbol = currentCurrency === 'KHR' ? '៛' : '$';
+            document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
+
+            // Update currency toggle buttons UI
+            const btnKhr = document.getElementById('btn-curr-khr');
+            const btnUsd = document.getElementById('btn-curr-usd');
+            if (currentCurrency === 'KHR') {
+                btnKhr.className = 'px-2.5 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white transition';
+                btnUsd.className = 'px-2.5 py-1 text-xs font-bold rounded-md text-slate-300 hover:text-white transition';
+            } else {
+                btnUsd.className = 'px-2.5 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white transition';
+                btnKhr.className = 'px-2.5 py-1 text-xs font-bold rounded-md text-slate-300 hover:text-white transition';
+            }
+
+            document.getElementById('invoice-number').value = inv.invoiceNumber;
+            document.getElementById('customer-name').value = inv.customerName === 'អតិថិជនទូទៅ' ? '' : inv.customerName;
+            document.getElementById('customer-phone').value = inv.customerPhone || '';
+            document.getElementById('date-day').value = inv.day || '08';
+            document.getElementById('date-month').value = inv.month || '11';
+            document.getElementById('date-year').value = inv.year || '26';
+            document.getElementById('deposit-input').value = inv.deposit || 0;
+
+            invoiceItems = inv.items && inv.items.length > 0 
+                ? inv.items 
+                : [{ id: 1, description: '', qty: '', unitPrice: '' }];
+
+            renderTableRows();
+            calculateTotals();
+            toggleHistoryModal(false);
+            showToast(`បានបើកវិក័យប័ត្រ N° ${inv.invoiceNumber}`);
+        }
+
+        function deleteSavedInvoice(id, event) {
+            event.stopPropagation();
+            const list = getSavedInvoices().filter(inv => inv.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            updateHistoryBadge();
+            renderHistoryList();
+            showToast('បានលុបវិក័យប័ត្រចេញពីប្រវត្តិ');
+        }
+
+        function updateHistoryBadge() {
+            const count = getSavedInvoices().length;
+            document.getElementById('saved-count-badge').textContent = count;
+        }
+
+        function toggleHistoryModal(show) {
+            const modal = document.getElementById('history-modal');
+            if (show) {
+                renderHistoryList();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('history-list');
+            const list = getSavedInvoices();
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <p class="text-sm font-semibold">មិនទាន់មានវិក័យប័ត្ររក្សាទុកទេ</p>
+                        <p class="text-xs mt-1">ចុច "រក្សាទុក (Save)" ដើម្បីរក្សាទុកវិក័យប័ត្របច្ចុប្បន្ន</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(inv => {
+                const sym = inv.currency === 'USD' ? '$' : '៛';
+                const formattedTotal = inv.currency === 'USD' 
+                    ? Number(inv.grandTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })
+                    : Math.round(inv.grandTotal).toLocaleString('en-US');
+
+                return `
+                    <div onclick="loadInvoice(${inv.id})" class="bg-white p-3.5 rounded-xl border border-slate-200 hover:border-indigo-500 shadow-xs hover:shadow-md transition cursor-pointer group">
+                        <div class="flex items-center justify-between">
+                            <span class="font-stamp font-bold text-rose-700 text-sm">N° ${escapeHtml(inv.invoiceNumber)}</span>
+                            <span class="text-xs text-slate-500">${escapeHtml(inv.date)}</span>
+                        </div>
+                        <div class="mt-1 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">${escapeHtml(inv.customerName)}</p>
+                                ${inv.customerPhone ? `<p class="text-xs text-slate-500">Tel: ${escapeHtml(inv.customerPhone)}</p>` : ''}
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-indigo-700">${formattedTotal} ${sym}</p>
+                                <button type="button" onclick="deleteSavedInvoice(${inv.id}, event)" class="text-[11px] text-rose-500 hover:text-rose-700 underline mt-0.5 cursor-pointer">
+                                    លុប (Delete)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================================================================
+        // UTILITIES
+        // =========================================================================
+        let toastTimeout;
+        function showToast(message) {
+            const banner = document.getElementById('toast-banner');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.textContent = message;
+
+            banner.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                banner.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
